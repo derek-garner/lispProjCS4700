@@ -1,0 +1,520 @@
+%!PS-Adobe-2.0
+%%Creator: newLISP
+
+%% ---------- SETUP ----------
+
+/orient 0 def
+/xpos 0 def
+/ypos 0 def
+/pi 3.141592654 def
+
+/fillcolor {0.8 0.8 0.8} def
+/Helvetica findfont 12 scalefont setfont
+
+/turtlestack [0 0 0] def
+
+/pushturtle
+	{	
+	turtlestack length /len exch def 
+	turtlestack aload pop 
+	xpos ypos orient len 3 add array astore
+	/turtlestack exch def
+	} def
+
+/popturtle
+	{
+	turtlestack length /len exch def
+	len 3 gt {
+		turtlestack aload pop
+		/orient exch def
+		/ypos exch def
+		/xpos exch def
+		len 3 sub array astore
+		/turtlestack exch def
+		} if
+	} def
+
+%% ---------- NAVIGATION ----------
+
+% x y -
+/goto
+  {
+  /ypos exch def
+  /xpos exch def
+  xpos ypos moveto
+  } def
+
+% points -
+/move
+  {
+  /len exch def
+  /xpos xpos orient sin len mul add def
+  /ypos ypos orient cos len mul add def
+  xpos ypos moveto
+  } def
+  
+% degree -
+/turn
+  {
+  /orient exch orient add def
+  } def
+  
+% degree -
+/angle
+  {
+  /orient exch def
+  } def
+  
+%% ---------- LINE DRAWING ----------
+
+% turtle position is changed
+  
+% points -
+/draw
+  {
+  /len exch def
+  newpath
+  xpos ypos moveto
+  /xpos xpos orient sin len mul add def
+  /ypos ypos orient cos len mul add def
+  xpos ypos lineto stroke
+  } def  
+
+% points -
+/drawtolen
+  {
+  /len exch def
+  /xpos xpos orient sin len mul add def
+  /ypos ypos orient cos len mul add def
+  xpos ypos lineto
+  } def  
+  
+% x y
+/drawto
+  {
+  /newy exch def
+  /newx exch def
+  newpath
+  xpos ypos moveto
+  newx newy lineto
+  stroke
+  newy ypos sub newx xpos sub atan neg 90 add /orient exch def
+  /xpos newx def
+  /ypos newy def
+  } def
+  
+% x1 y1 x2 y2 x3 y3
+/bezier
+  {
+  newpath
+  curve
+  stroke
+  } def
+
+/curve
+  {
+  /y3 exch def
+  /x3 exch def
+  /y2 exch def
+  /x2 exch def
+  /y1 exch def
+  /x1 exch def
+  matrix currentmatrix
+  x1 y1 x2 y2 x3 y3
+  xpos ypos translate
+  orient neg rotate
+  0 0 moveto
+  rcurveto
+  setmatrix
+  y3 x3 atan neg /angleinc exch def
+  /len x3 angleinc cos div def
+  /orient orient angleinc add def
+  /xpos xpos orient 90 add sin len mul add def
+  /ypos ypos orient 90 add cos len mul add def
+  } def
+
+% save turtle position and orientation
+
+/turtlesave
+  {
+  /xpossave xpos def
+  /ypossave ypos def
+  /orientsave orient def
+  } def
+  
+% restore turtle position and orientation
+
+/turtlerestore
+  {
+  /xpos xpossave def
+  /ypos ypossave def
+  /orient orientsave def
+  xpos ypos moveto
+  } def
+
+% x1 y1 x2 y2 -
+/fromto
+  {
+  /ypos exch def
+  /xpos exch def
+  newpath
+  moveto
+  xpos ypos lineto
+  stroke
+  } def
+
+%% ---------- SHAPES ----------
+
+% shapes are closed and do not change the turtle position
+
+% radius sides fillflag -
+/polygon
+  {
+  /fillflag exch def
+  360 exch div /orientinc exch def
+  /radius exch def
+  gsave
+  newpath
+  xpos ypos translate
+  orient neg rotate
+  % 0 sin radius mul
+  % 0 cos radius mul moveto
+  0 radius moveto
+  0 orientinc 360
+   {
+   dup
+   sin radius mul exch
+   cos radius mul
+   lineto
+   } for
+  closepath
+  fillflag {fillshape} if
+  stroke
+  grestore
+  } def
+  
+% radius fillflag -
+/circle
+  {
+  /fillflag exch def
+  /radius exch def
+  newpath
+  xpos ypos radius 0 360 arc
+  fillflag {fillshape} if
+  stroke
+  } def
+  
+  
+% radius width fillflag
+/pie
+  {
+  /fillflag exch def
+  /width exch def
+  90 orient sub width sub /start exch def
+  start width add /end exch def
+  /radius exch def
+  newpath
+  xpos ypos moveto
+  xpos ypos radius start end arc
+  fillflag {fillshape} if
+  closepath
+  stroke
+  } def
+  
+% width height fill
+/petal
+  {
+  /fillflag exch def
+  /y exch def
+  /x exch def
+  gsave
+  xpos ypos translate
+  orient neg rotate
+  newpath
+  0 0 moveto
+  x neg y x y 0 0 
+  rcurveto
+  fillflag {fillshape} if
+  closepath
+  stroke
+  grestore
+  } def
+  
+% xradius yradius start end flag -
+/ellipse
+  {
+  /fillflag exch def
+  % swap start/end and x/y
+  neg /startangle exch def
+  neg /endangle exch def
+  /xrad exch def
+  /yrad exch def
+ 
+  gsave
+  xpos ypos translate
+  orient 90 sub neg rotate
+  newpath
+  xrad yrad scale
+  0 0 1 startangle endangle arc
+  fillflag {fillshape} if
+  1 xrad div 1 yrad div scale
+  closepath
+  stroke
+  grestore
+  } def
+
+/fillshape
+  {
+  gsave
+  fillcolor setrgbcolor
+  fill 
+  grestore
+  } def
+   
+%% ---------- text ----------
+
+/text
+  {
+  /str exch def
+  gsave
+  xpos ypos translate
+  newpath
+  0 0 moveto
+  orient 89.9999 sub neg rotate
+  str show
+  grestore
+  str stringwidth pop move
+  } def
+  
+/textoutline
+  {
+  /fillflag exch def
+  /str exch def
+  gsave
+  xpos ypos translate
+  newpath
+  0 0 moveto
+  orient 89.9999 sub neg rotate
+  str true charpath
+  fillflag {fillshape} if
+  stroke
+  grestore
+  str stringwidth pop move
+  } def
+  
+/textclip
+  {
+  /str exch def
+  matrix currentmatrix
+  xpos ypos translate
+  newpath
+  0 0 moveto
+  orient 89.9999 sub neg rotate
+  str true charpath
+  clip
+  setmatrix
+  } def
+
+/textarc
+  {
+  /str exch def
+  2 mul pi mul /circum exch def
+  
+  str stringwidth pop /len exch def
+  circum len div 360 exch div turn
+  str text
+  } def
+  
+/textarcoutline
+  {
+  /fillflag exch def
+  /str exch def
+  2 mul pi mul /circum exch def
+  
+  str stringwidth pop /len exch def
+  circum len div 360 exch div turn
+  str fillflag textoutline
+  } def
+  
+% --------------------------
+50 250 goto
+/fillcolor {0 0 0} def
+% new shape
+turtlesave
+newpath
+xpos ypos moveto
+0 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+closepath
+fillshape
+stroke
+turtlerestore
+70 250 goto
+/fillcolor {0.5 0.5 0.5} def
+% new shape
+turtlesave
+newpath
+xpos ypos moveto
+0 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+closepath
+fillshape
+stroke
+turtlerestore
+90 250 goto
+/fillcolor {0 0 0} def
+% new shape
+turtlesave
+newpath
+xpos ypos moveto
+0 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+closepath
+fillshape
+stroke
+turtlerestore
+110 250 goto
+/fillcolor {0.5 0.5 0.5} def
+% new shape
+turtlesave
+newpath
+xpos ypos moveto
+0 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+closepath
+fillshape
+stroke
+turtlerestore
+130 250 goto
+/fillcolor {0 0 0} def
+% new shape
+turtlesave
+newpath
+xpos ypos moveto
+0 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+closepath
+fillshape
+stroke
+turtlerestore
+150 250 goto
+/fillcolor {0.5 0.5 0.5} def
+% new shape
+turtlesave
+newpath
+xpos ypos moveto
+0 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+closepath
+fillshape
+stroke
+turtlerestore
+170 250 goto
+/fillcolor {0 0 0} def
+% new shape
+turtlesave
+newpath
+xpos ypos moveto
+0 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+closepath
+fillshape
+stroke
+turtlerestore
+190 250 goto
+/fillcolor {0.5 0.5 0.5} def
+% new shape
+turtlesave
+newpath
+xpos ypos moveto
+0 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+closepath
+fillshape
+stroke
+turtlerestore
+210 250 goto
+/fillcolor {0 0 0} def
+% new shape
+turtlesave
+newpath
+xpos ypos moveto
+0 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+closepath
+fillshape
+stroke
+turtlerestore
+230 250 goto
+/fillcolor {0.5 0.5 0.5} def
+% new shape
+turtlesave
+newpath
+xpos ypos moveto
+0 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+90 turn
+20 drawtolen
+closepath
+fillshape
+stroke
+turtlerestore
+showpage
